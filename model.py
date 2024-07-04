@@ -1,3 +1,11 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+# @Time: 2024/7/4 23:06
+# @Author: Tingyu Shi
+# @File: model.py
+# @Description: 定义LeNet模型
+
+
 import torch
 import torch.nn as nn
 from torchsummary import summary
@@ -6,6 +14,9 @@ from torchsummary import summary
 class LeNet(nn.Module):
 
     def __init__(self):
+        """
+        引入搭建model所需的函数
+        """
         super().__init__()
         # 卷积层
         self.conv1 = nn.Conv2d(1, 6, 5, 1, 2)
@@ -13,7 +24,7 @@ class LeNet(nn.Module):
         # 池化层
         self.pool1 = nn.AvgPool2d(2, 2)
         self.pool2 = nn.AvgPool2d(2, 2)
-        # 全连接层
+        # 池化层
         self.fc1 = nn.Linear(5 * 5 * 16, 120)
         self.fc2 = nn.Linear(120, 84)
         self.fc3 = nn.Linear(84, 10)
@@ -24,6 +35,11 @@ class LeNet(nn.Module):
         self.softmax = nn.LogSoftmax(1)
 
     def forward(self, x):
+        """
+        定义前向传播
+        :param x: 输入
+        :return: x
+        """
         x = self.sigmoid(self.conv1(x))
         x = self.pool1(x)
         x = self.sigmoid(self.conv2(x))
@@ -36,6 +52,9 @@ class LeNet(nn.Module):
 
 
 if __name__ == '__main__':
+    """
+    测试model的结构
+    """
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = LeNet().to(device)
     print(summary(model, (1, 28, 28)))
