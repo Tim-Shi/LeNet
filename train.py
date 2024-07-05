@@ -4,8 +4,7 @@
 # @Author: Tingyu Shi
 # @File: train.py
 # @Description: 训练LeNet模型
-
-
+import argparse
 import copy
 import time
 
@@ -19,7 +18,7 @@ import pandas as pd
 from model import LeNet
 
 
-def train_val_dataloader():
+def train_val_dataloader(batches):
     """
     下载并加载数据集
     :return: train_loader, val_loader
@@ -30,17 +29,17 @@ def train_val_dataloader():
                            download=True)
     train_dataset, val_dataset = data.random_split(dataset, [round(0.8 * len(dataset)), round(0.2 * len(dataset))])
     train_dataloader = data.DataLoader(dataset=train_dataset,
-                                       batch_size=128,
+                                       batch_size=batches,
                                        shuffle=True,
                                        num_workers=0)
     val_dataloader = data.DataLoader(dataset=val_dataset,
-                                     batch_size=128,
+                                     batch_size=batches,
                                      shuffle=True,
                                      num_workers=0)
     return train_dataloader, val_dataloader
 
 
-def train_model(model, train_loader, val_loader, epochs):
+def train_model(model, train_loader, val_loader, epochs, batches):
     """
     训练模型
     :param model:
@@ -73,14 +72,16 @@ def train_model(model, train_loader, val_loader, epochs):
     val_acc_list = []
     # 训练开始时间
     since_time = time.time()
+    # 训练耗费时间列表
+    elapsed_time_list = []
 
     # 开始训练
     for epoch in range(epochs):
 
         # 打印当前epoch
-        print('-' * 10)
-        print('Epoch {}/{}'.format(epoch + 1, epochs))
-        print('-' * 10)
+        print('-' * 33)
+        print('epoch {}/{}'.format(epoch + 1, epochs))
+        print('-' * 33)
 
         # 初始化参数
         # 训练集损失值
@@ -150,8 +151,8 @@ def train_model(model, train_loader, val_loader, epochs):
         val_acc_list.append(val_corrects / val_num)
 
         # 打印每epoch的最终的loss和acc
-        print('{} train loss:{:.4f} train acc: {:.4f}'.format(epoch + 1, train_loss_list[-1], train_acc_list[-1]))
-        print('{} val loss:{:.4f} val acc: {:.4f}'.format(epoch + 1, val_loss_list[-1], val_acc_list[-1]))
+        print('{} train_loss:{:.4f} train_acc: {:.4f}'.format(epoch + 1, train_loss_list[-1], train_acc_list[-1]))
+        print('{} val_loss:{:.4f} val_acc: {:.4f}'.format(epoch + 1, val_loss_list[-1], val_acc_list[-1]))
 
         if val_acc_list[-1] > best_acc:
             # 更新最高准确度
@@ -160,21 +161,26 @@ def train_model(model, train_loader, val_loader, epochs):
             best_model_wts = copy.deepcopy(model.state_dict())
 
         # 计算训练和验证的耗时
-        time_elapsed = time.time() - since_time
-        print('训练和验证耗费的时间:{:.0f}m{:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
+        elapsed_time = time.time() - since_time
+        elapsed_time = '{:.0f}m{:.0f}s'.format(elapsed_time // 60, elapsed_time % 60)
+        print('训练和验证耗费的时间:', elapsed_time)
+        elapsed_time_list.append(elapsed_time)
 
-    torch.save(best_model_wts, './best_model_' + str(epochs) + '.pth')
+    # 保存model、loss和acc
+    torch.save(best_model_wts, './best_model_epochs' + str(epochs) + '_batches' + str(batches) + '.pth')
     train_process = pd.DataFrame({
         'epoch': range(1, epochs + 1),
         'train_loss_list': train_loss_list,
         'train_acc_list': train_acc_list,
         'val_loss_list': val_loss_list,
-        'val_acc_list': val_acc_list
+        'val_acc_list': val_acc_list,
+        'time_elapsed': elapsed_time_list
     })
+    train_process.to_csv('loss_acc_epochs' + str(epochs) + '_batches' + str(batches) + '.csv', index=False)
     return train_process
 
 
-def matplot_loss_acc(train_process, epochs):
+def matplot_loss_acc(train_process, epochs, batches):
     """
     显示每一次迭代后的训练集和验证集的loss和acc
     :param train_process:
@@ -189,14 +195,14 @@ def matplot_loss_acc(train_process, epochs):
     plt.xlabel("epoch")
     plt.ylabel("loss")
     plt.subplot(1, 2, 2)
-    plt.ylim(0, 1)
+    # plt.ylim(0, 1)
     # plt.yticks([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1])
     plt.plot(train_process['epoch'], train_process.train_acc_list, "ro-", label="Train acc")
     plt.plot(train_process['epoch'], train_process.val_acc_list, "bs-", label="Val acc")
     plt.xlabel("epoch")
     plt.ylabel("acc")
     plt.legend()
-    plt.savefig('./loss_acc_' + str(epochs) + '.png')
+    plt.savefig('./loss_acc_epochs' + str(epochs) + '_batches' + str(batches) + '.png')
     # plt.show()
 
 
@@ -204,12 +210,21 @@ if __name__ == '__main__':
     """
     训练model
     """
-    epochs = 20
+    # 设置命令行参数，输入epochs和batches
+    parser = argparse.ArgumentParser(description='命令行参数')
+    parser.add_argument('--epochs', '-e', type=int, help='训练轮次，非必须参数,默认值为10', default=10)
+    parser.add_argument('--batches', '-b', type=int, help='batch大小，非必须参数,默认值为32', default=32)
+    args = vars(parser.parse_args())
+    # 打印训练轮次和batch大小
+    print('-' * 33)
+    print(args)
+    epochs = args['epochs']
+    batches = args['batches']
     # 实例化模型
     LeNet = LeNet()
     # 加载数据集
-    train_dataloader, val_dataloader = train_val_dataloader()
+    train_dataloader, val_dataloader = train_val_dataloader(batches)
     # 训练模型
-    train_process = train_model(LeNet, train_dataloader, val_dataloader, epochs)
+    train_process = train_model(LeNet, train_dataloader, val_dataloader, epochs, batches)
     # 根据loss和acc绘制统计图
-    matplot_loss_acc(train_process, epochs)
+    matplot_loss_acc(train_process, epochs, batches)
