@@ -20,7 +20,7 @@ if __name__ == '__main__':
     print(x)
     print(y.shape)  # 输出torch.Size([3, 4])
     print(y)
-    print('-' * 50)
+    print('=' * 50)
     # 注意：squeeze()仅可删除维度大小==1的维度，对其他维度无效
     a = torch.rand(2, 3, 4)
     b = x.squeeze()

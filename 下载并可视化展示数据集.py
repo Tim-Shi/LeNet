@@ -22,12 +22,10 @@ def loader_dataset():
                                  train=True,
                                  transform=transforms.Compose([transforms.ToTensor(), transforms.Resize(28)]),
                                  download=True)
-
     train_dataloader = data.DataLoader(dataset=train_dataset,
-                                   batch_size=64,
-                                   shuffle=True,
-                                   num_workers=4)
-
+                                       batch_size=64,
+                                       shuffle=True,
+                                       num_workers=4)
     return train_dataset, train_dataloader
 
 

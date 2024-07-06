@@ -3,11 +3,12 @@
 # @Time: 2024/7/4 23:10
 # @Author: Tingyu Shi
 # @File: train.py
-# @Description: 训练LeNet模型
+# @Description: 训练模型
+
+
 import argparse
 import copy
 import time
-
 import torch
 from torch import optim, nn
 from torchvision.datasets import FashionMNIST
@@ -21,7 +22,8 @@ from model import LeNet
 def train_val_dataloader(batches):
     """
     下载并加载数据集
-    :return: train_loader, val_loader
+    :param batches:
+    :return: train_dataloader, val_dataloader
     """
     dataset = FashionMNIST(root='./dataset',
                            train=True,
@@ -39,13 +41,14 @@ def train_val_dataloader(batches):
     return train_dataloader, val_dataloader
 
 
-def train_model(model, train_loader, val_loader, epochs, batches):
+def train_model(model, train_dataloader, val_dataloader, epochs, batches):
     """
     训练模型
     :param model:
-    :param train_loader:
-    :param val_loader:
+    :param train_dataloader:
+    :param val_dataloader:
     :param epochs:
+    :param batches:
     :return: train_process
     """
     # 设置训练所用到的设备，有GPU用GPU没有GPU用CPU
@@ -79,9 +82,9 @@ def train_model(model, train_loader, val_loader, epochs, batches):
     for epoch in range(epochs):
 
         # 打印当前epoch
-        print('-' * 33)
+        print('=' * 33)
         print('epoch {}/{}'.format(epoch + 1, epochs))
-        print('-' * 33)
+        print('=' * 33)
 
         # 初始化参数
         # 训练集损失值
@@ -98,12 +101,12 @@ def train_model(model, train_loader, val_loader, epochs, batches):
         val_num = 0
 
         # 对每一个batch训练和计算
-        for step, (images, labels) in enumerate(train_loader):
+        for step, (images, labels) in enumerate(train_dataloader):
             # 将图像images和标签labels放入到训练设备中
             images, labels = images.to(device), labels.to(device)
             # 设置模型为训练模式
             model.train()
-            # 前向传播计算，输入为一个batch，输出为一个batch中对应的预测
+            # 前向传播计算，输入为一个batch的数据集，输出为一个batch的数据集中对应的预测
             outputs = model(images)
             # 查找每一行输出中最大值的索引
             predict_label_idx = torch.argmax(outputs, 1)
@@ -119,13 +122,13 @@ def train_model(model, train_loader, val_loader, epochs, batches):
 
             # 累加每个batch的损失值
             train_loss += loss.item() * images.size(0)
-            # 累加每个batch中预测正确的数量，如果预测正确，则train_correct+1
+            # 累加每个batch中预测正确的数量，如果预测正确，则train_corrects+1
             train_corrects += torch.sum(predict_label_idx == labels).item()
             # 累加用于训练的每个batch的样本数量
             train_num += images.size(0)
 
         # 对每一个batch验证和计算
-        for step, (images, labels) in enumerate(val_loader):
+        for step, (images, labels) in enumerate(val_dataloader):
             # 将图像images和标签labels放入到训练设备中
             images, labels = images.to(device), labels.to(device)
             # 设置模型为评估模式
@@ -167,7 +170,7 @@ def train_model(model, train_loader, val_loader, epochs, batches):
         elapsed_time_list.append(elapsed_time)
 
     # 保存model、loss和acc
-    torch.save(best_model_wts, './best_model_epochs' + str(epochs) + '_batches' + str(batches) + '.pth')
+    torch.save(best_model_wts, './train_pth/best_model_epochs' + str(epochs) + '_batches' + str(batches) + '.pth')
     train_process = pd.DataFrame({
         'epoch': range(1, epochs + 1),
         'train_loss_list': train_loss_list,
@@ -176,7 +179,7 @@ def train_model(model, train_loader, val_loader, epochs, batches):
         'val_acc_list': val_acc_list,
         'time_elapsed': elapsed_time_list
     })
-    train_process.to_csv('loss_acc_epochs' + str(epochs) + '_batches' + str(batches) + '.csv', index=False)
+    train_process.to_csv('./train_loss_acc/loss_acc_epochs' + str(epochs) + '_batches' + str(batches) + '.csv', index=False)
     return train_process
 
 
@@ -196,13 +199,12 @@ def matplot_loss_acc(train_process, epochs, batches):
     plt.ylabel("loss")
     plt.subplot(1, 2, 2)
     # plt.ylim(0, 1)
-    # plt.yticks([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1])
     plt.plot(train_process['epoch'], train_process.train_acc_list, "ro-", label="Train acc")
     plt.plot(train_process['epoch'], train_process.val_acc_list, "bs-", label="Val acc")
     plt.xlabel("epoch")
     plt.ylabel("acc")
     plt.legend()
-    plt.savefig('./loss_acc_epochs' + str(epochs) + '_batches' + str(batches) + '.png')
+    plt.savefig('./train_loss_acc/loss_acc_epochs' + str(epochs) + '_batches' + str(batches) + '.png')
     # plt.show()
 
 
@@ -212,19 +214,19 @@ if __name__ == '__main__':
     """
     # 设置命令行参数，输入epochs和batches
     parser = argparse.ArgumentParser(description='命令行参数')
-    parser.add_argument('--epochs', '-e', type=int, help='训练轮次，非必须参数,默认值为10', default=10)
-    parser.add_argument('--batches', '-b', type=int, help='batch大小，非必须参数,默认值为32', default=32)
+    parser.add_argument('--epochs', '-e', type=int, help='训练轮次，非必须参数，默认值为25', default=25)
+    parser.add_argument('--batches', '-b', type=int, help='batch大小，非必须参数，默认值为32', default=32)
     args = vars(parser.parse_args())
     # 打印训练轮次和batch大小
-    print('-' * 33)
+    print('=' * 33)
     print(args)
     epochs = args['epochs']
     batches = args['batches']
     # 实例化模型
-    LeNet = LeNet()
-    # 加载数据集
+    model = LeNet()
+    # 加载训练和验证数据集
     train_dataloader, val_dataloader = train_val_dataloader(batches)
     # 训练模型
-    train_process = train_model(LeNet, train_dataloader, val_dataloader, epochs, batches)
+    train_process = train_model(model, train_dataloader, val_dataloader, epochs, batches)
     # 根据loss和acc绘制统计图
     matplot_loss_acc(train_process, epochs, batches)

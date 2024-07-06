@@ -3,7 +3,7 @@
 # @Time: 2024/7/4 23:06
 # @Author: Tingyu Shi
 # @File: model.py
-# @Description: 定义LeNet模型
+# @Description: 定义模型
 
 
 import torch
