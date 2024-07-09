@@ -104,7 +104,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='命令行参数')
     parser.add_argument('--pth', '-p', type=str, help='模型路径，非必须参数，默认值为./train_pth/best_model_epochs50_batches32.pth',
                         default='./train_pth/best_model_epochs50_batches32.pth')
-    parser.add_argument('--batches', '-b', type=int, help='batch大小，非必须参数，默认值为1', default=8192)
+    parser.add_argument('--batches', '-b', type=int, help='batch大小，非必须参数，默认值为1', default=1)
     args = vars(parser.parse_args())
     # 打印模型路径和batch大小
     print('=' * 66)
