@@ -16,6 +16,7 @@ from torchvision import transforms
 from torch.utils import data
 import matplotlib.pyplot as plt
 import pandas as pd
+from tqdm import tqdm
 from model import LeNet
 
 
@@ -100,12 +101,12 @@ def train_model(model, train_dataloader, val_dataloader, epochs, batches):
         # 验证集样本数量
         val_num = 0
 
+        # 设置模型为训练模式
+        model.train()
         # 对每一个batch训练和计算
-        for step, (images, labels) in enumerate(train_dataloader):
+        for step, (images, labels) in tqdm(enumerate(train_dataloader)):
             # 将图像images和标签labels放入到训练设备中
             images, labels = images.to(device), labels.to(device)
-            # 设置模型为训练模式
-            model.train()
             # 前向传播计算，输入为一个batch的数据集，输出为一个batch的数据集中对应的预测
             outputs = model(images)
             # 查找每一行输出中最大值的索引
@@ -127,12 +128,12 @@ def train_model(model, train_dataloader, val_dataloader, epochs, batches):
             # 累加用于训练的每个batch的样本数量
             train_num += images.size(0)
 
+        # 设置模型为评估模式
+        model.eval()
         # 对每一个batch验证和计算
-        for step, (images, labels) in enumerate(val_dataloader):
+        for step, (images, labels) in tqdm(enumerate(val_dataloader)):
             # 将图像images和标签labels放入到训练设备中
             images, labels = images.to(device), labels.to(device)
-            # 设置模型为评估模式
-            model.eval()
             # 前向传播计算，输入为一个batch，输出为一个batch中对应的预测
             outputs = model(images)
             # 查找每一行输出中最大值的索引

@@ -57,6 +57,8 @@ def test_model(model, best_model_wts, test_dataloader, class_label, batches):
     # 测试集样本数量
     test_num = 0
 
+    # 设置模型为评估模式
+    model.eval()
     # 开始测试，将梯度置为0，只进行前向传播计算，不计算梯度，从而节省内存，加快运行速度
     with torch.no_grad():
         for images, labels in test_dataloader:
@@ -64,8 +66,6 @@ def test_model(model, best_model_wts, test_dataloader, class_label, batches):
             # print('labels.shape', labels.shape)
             # 将图像images和标签labels放入到训练设备中
             images, labels = images.to(device), labels.to(device)
-            # 设置模型为评估模式
-            model.eval()
             # 前向传播计算，输入为一个batch的数据集，输出为一个batch的数据集中对应的预测
             output = model(images)
             # 查找每一行输出中最大值的索引
