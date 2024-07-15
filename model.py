@@ -12,7 +12,6 @@ from torchsummary import summary
 
 
 class LeNet(nn.Module):
-
     def __init__(self):
         """
         引入搭建model所需的函数
