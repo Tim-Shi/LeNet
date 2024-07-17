@@ -28,7 +28,7 @@ def train_val_dataloader(batches):
     """
     dataset = FashionMNIST(root='./dataset',
                            train=True,
-                           transform=transforms.Compose([transforms.ToTensor(), transforms.Resize(28)]),
+                           transform=transforms.Compose([transforms.Resize(28), transforms.ToTensor()]),
                            download=True)
     train_dataset, val_dataset = data.random_split(dataset, [round(0.8 * len(dataset)), round(0.2 * len(dataset))])
     train_dataloader = data.DataLoader(dataset=train_dataset,

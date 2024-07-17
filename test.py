@@ -23,7 +23,7 @@ def test_dataloader(batches):
     """
     test_dataset = FashionMNIST(root='./dataset',
                                 train=True,
-                                transform=transforms.Compose([transforms.ToTensor(), transforms.Resize(28)]),
+                                transform=transforms.Compose([transforms.Resize(28), transforms.ToTensor()]),
                                 download=True)
     test_dataloader = data.DataLoader(dataset=test_dataset,
                                       batch_size=batches,
